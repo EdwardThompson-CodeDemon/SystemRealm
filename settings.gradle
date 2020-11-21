@@ -1,0 +1,4 @@
+include ':Annotations'
+include ':AnnotationProcessor'
+include ':app'
+rootProject.name = "Realm"
