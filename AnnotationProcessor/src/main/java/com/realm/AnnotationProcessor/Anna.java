@@ -82,6 +82,8 @@ public class Anna extends AbstractProcessor {
         HashMap<String,HashMap<String,String>> package_data_columns=new HashMap<>();
         HashMap<String,HashMap<String,String>> package_data_datatype=new HashMap<>();
         HashMap<String,HashMap<String,String>> package_json_column=new HashMap<>();
+        HashMap<String,HashMap<String,String>> package_column_json=new HashMap<>();
+       HashMap<String,HashMap<String,String>> package_column_data_type=new HashMap<>();
 
         messager.printMessage(Diagnostic.Kind.NOTE, "Launched generated variables");
 
@@ -100,9 +102,17 @@ public class Anna extends AbstractProcessor {
         }
         // assert sid != null;
         String sid_json_key;
+        String id_column_name="";
         try {
             sid_json_key = sid.getAnnotation(DynamicProperty.class).json_key();
         }finally {
+
+        }
+  try {
+            id_column_name = dbc.getClass().getField("id").getAnnotation(DynamicProperty.class).column_name();
+        }catch (NoSuchFieldException e) {
+      e.printStackTrace();
+  }finally {
 
         }
 
@@ -175,10 +185,12 @@ public class Anna extends AbstractProcessor {
             HashMap<String,String> data_column=new HashMap<>();
             HashMap<String,String> data_datatype=new HashMap<>();
             HashMap<String,String> json_column=new HashMap<>();
+            HashMap<String,String> column_json=new HashMap<>();
+            HashMap<String,String> column_datatype=new HashMap<>();
             Element super_element=processingEnv.getTypeUtils().asElement(((TypeElement)element).getSuperclass());
             List<Element> all_elements=new ArrayList<>(element.getEnclosedElements());
             all_elements.addAll(super_element.getEnclosedElements());
-            String create_sttm = "CREATE TABLE \\\""+ann.table_name()+"\\\"";
+            String create_sttm = "CREATE TABLE \\\"\"+(copy?\"CP_\":\"\")+\""+ann.table_name()+"\\\"";
             String create_index_sttm = "";
             String qry="DELETE FROM "+ann.table_name()+" WHERE ("+sid_column+"='\"+sid+\"' OR "+sid_column+"=\"+sid+\") AND sync_status='"+ sync_status.syned.ordinal()+"'";
 
@@ -194,37 +206,44 @@ public class Anna extends AbstractProcessor {
 
                 DynamicProperty dp=  field.getAnnotation(DynamicProperty.class);
                 if(dp==null){ messager.printMessage(Diagnostic.Kind.NOTE, field.getSimpleName()+" Isnt annotated Skipping ..");continue;}
+                String column_name=(dp.column_name().length()<1)?field.getSimpleName().toString():dp.column_name();
                 try {
-                    column_index.put(dp.column_name(),dp.indexed_column());
-                    data_column.put(field.getSimpleName().toString(),dp.column_name());
+                    column_index.put(column_name,dp.indexed_column());
+                    data_column.put(field.getSimpleName().toString(),column_name);
                     data_datatype.put(field.getSimpleName().toString(),field.asType().toString());
-                    json_column.put(dp.json_key(),dp.column_name());
+                   if(dp.json_key().length()>0&&!column_name.equalsIgnoreCase(id_column_name))
+                    {
+                        column_json.put(column_name,dp.json_key());
+                        column_datatype.put(column_name,field.asType().toString());
+
+                    }
+                    json_column.put(dp.json_key(),column_name);
                     messager.printMessage(Diagnostic.Kind.NOTE, "Field kind "+field.asType().toString()+" is  OK "+packages.size());
                     if(!started){
                         started=true;
                         create_sttm+=" (";
                     }
-                    if(!columns_all.contains(dp.column_name())){
-                        create_sttm += "\\\""+dp.column_name() + "\\\" " + dp.column_data_type() + (dp.extra_params() == null || dp.extra_params().length() < 1 ? "" : " " + dp.extra_params()) + " " + (dp.column_default_value() == null || dp.column_default_value().length() < 1 ? "" : " DEFAULT " + dp.column_default_value()) + " ,";
+                    if(!columns_all.contains(column_name)){
+                        create_sttm += "\\\""+column_name + "\\\" " + dp.column_data_type() + (dp.extra_params() == null || dp.extra_params().length() < 1 ? "" : " " + dp.extra_params()) + " " + (dp.column_default_value() == null || dp.column_default_value().length() < 1 ? "" : " DEFAULT " + dp.column_default_value()) + " ,";
                         if(dp.indexed_column())
                         {
-                            create_index_sttm+="CREATE INDEX "+ann.table_name()+"_"+dp.column_name()+" ON "+ann.table_name()+"("+dp.column_name()+");";
+                            create_index_sttm+="CREATE INDEX "+ann.table_name()+"_"+column_name+" ON "+ann.table_name()+"("+column_name+");";
 
                         }
-                        columns_all.add(dp.column_name());
+                        columns_all.add(column_name);
 
                     }
 
 
 
-                    table_columns_i.add("{\""+dp.column_name()+"\",\""+dp.json_key()+"\"}");
+                    table_columns_i.add("{\""+column_name+"\",\""+dp.json_key()+"\"}");
 
-                    messager.printMessage(Diagnostic.Kind.NOTE, dp.column_name()+" Column");
+                    messager.printMessage(Diagnostic.Kind.NOTE, column_name+" Column");
 
 
 
                 }catch (Exception ex){
-                    messager.printMessage(Diagnostic.Kind.ERROR, dp.column_name()+" Error "+ex.getMessage());
+                    messager.printMessage(Diagnostic.Kind.ERROR, column_name+" Error "+ex.getMessage());
 
                 }
 
@@ -247,6 +266,8 @@ public class Anna extends AbstractProcessor {
             package_data_columns.put(packag_nm,data_column);
             package_data_datatype.put(packag_nm,data_datatype);
             package_json_column.put(packag_nm,json_column);
+            package_column_json.put(packag_nm,column_json);
+            package_column_data_type.put(packag_nm,column_datatype);
 
 
             writeSourceFile(typeElement);
@@ -257,6 +278,7 @@ public class Anna extends AbstractProcessor {
         ClassName list = ClassName.get("java.util", "List");
         ClassName arrayList = ClassName.get("java.util", "ArrayList");
         ClassName jsonObject = ClassName.get("org.json","JSONObject");
+        ClassName jsonArray = ClassName.get("org.json","JSONArray");
         ClassName cursor = ClassName.get("android.database","Cursor");
         TypeName result = ParameterizedTypeName.get(list, syncdescription);
         ClassName hashmap = ClassName.get(HashMap.class);
@@ -265,15 +287,100 @@ public class Anna extends AbstractProcessor {
 
 
 
-        MethodSpec.Builder b13 = MethodSpec.methodBuilder("getContentvaluesFromJson")
+        MethodSpec.Builder b13= MethodSpec.methodBuilder("getInsertStatementsFromJson")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(jsonArray, "array")
+                .addParameter(String.class, "package_name")
+                .addJavadoc("Returns most efficient direct insert queries as per sqlite 3.7 /nAdjust database compound Limit for optimization")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addException(ClassName.get("org.json","JSONException"))
-                .addParameter(jsonObject, "j")
-                .addParameter(String.class, "package_name")
-                .returns(jsonObject)
-                .addStatement("List<String> colz=  Arrays.asList(c.getColumnNames())")
-                .addStatement("JSONObject obj=new JSONObject()")
+                .returns(String[][].class)
+                .addCode("if(array.length()==0){return new String[][]{{\"()\",\"\"},{}};}")
+                .addStatement("int compound_limit=500")
+                .addStatement("int ar_sz=array.length()")
+                .addStatement("int max=ar_sz<=compound_limit?1:ar_sz%compound_limit>0?(ar_sz/compound_limit)+1:(ar_sz/compound_limit)")
+                .addStatement("String[] qryz=new String[max]")
+                .addStatement("StringBuffer sb_sid=new StringBuffer(\"(\");")
                 .beginControlFlow("switch(package_name)");
+
+        for (String s:package_column_json.keySet()) {
+
+            String columns=concat_map(package_column_json.get(s),true);
+            String json_keys=concat_map(package_column_json.get(s),false);
+            String columnz[]=split_string(columns,",");
+
+
+            b13.addCode("case \""+s+"\" :\n");
+            b13.beginControlFlow("for(int m=0;m<max;m++)");
+            b13.addStatement("StringBuffer sb=new StringBuffer()");
+             b13.addStatement("sb.append(\"REPLACE INTO "+package_table.get(s)+"("+columns+") \")");//(sid,member_id,acc_id,acc_name,sync_var) \")");
+            b13.beginControlFlow("for(int s=0;s<(((m*compound_limit)+compound_limit)<=ar_sz?compound_limit:ar_sz-(m*compound_limit));s++)");
+            b13.addStatement("int i=(m*compound_limit)+s");
+            b13.addStatement("JSONObject jo= array.getJSONObject(i)");
+            b13.addStatement("sb_sid.append(i==0?jo.getString(\"id\"):\",\"+jo.getString(\"id\"));");
+//            b13.addCode("sb.append(s==0?\"SELECT \"+(jo.getString(\"id\"))+\" AS sid,\"+\n" +
+//                    "                               (jo.getString(\"member_id\"))+\" AS member_id,\"+\n" +
+//                    "                                (jo.getString(\"acc_id\"))+\" AS acc_id,'\"+\n" +
+//                    "                               (jo.getString(\"acc_name\"))+\"' AS acc_name,'\"+\n" +
+//                    "                               (jo.getString(\"datecomparer\"))+\"' AS sync_var\":\n" +
+//                    "                                \" UNION SELECT \"+(jo.getString(\"id\"))+\",\"+\n" +
+//                    "                                        (jo.getString(\"member_id\"))+\",\"+\n" +
+//                    "                                        (jo.getString(\"acc_id\"))+\",'\"+\n" +
+//                    "                                        (jo.getString(\"acc_name\"))+\"','\"+\n" +
+             b13.addCode("sb.append(s==0?\"SELECT \"+");
+            int i=0;
+            for (Map.Entry<String, String> st:package_column_json.get(s).entrySet()) {
+//                if(st.getKey().equalsIgnoreCase("sync_status")) {
+//                    b13.addCode((i == 0 ? "\"'\"+" : ",'\"+") + sync_status.syned.ordinal()+"+\"' AS sync_status");
+//                }else {
+//                    b13.addCode((i == 0 ? "\"'\"+" : ",'\"+") + "jo.optString(\"" + st.getValue() + "\")+\"' AS " + st.getKey());
+//
+//                }
+                //   b13.addCode((i == 0 ? "\"'\"+" : ",'\"+") +(st.getKey().equalsIgnoreCase("sync_status")?sync_status.syned.ordinal(): "jo.optString(\"" + st.getValue() + "\")")+"+\"' AS " + st.getKey());
+
+
+                String cov=package_column_data_type.get(s).get(st.getKey()).equalsIgnoreCase("int")||package_column_data_type.get(s).get(st.getKey()).equalsIgnoreCase("double")?"":"'";
+
+                    b13.addCode((i == 0 ? "\""+cov+"\"+" : ","+cov+"\"+") +(st.getKey().equalsIgnoreCase("sync_status")?sync_status.syned.ordinal(): "jo.optString(\"" + st.getValue() + "\")")+"+\""+cov+" AS " + st.getKey());
+
+
+
+
+               i++;
+            }
+            b13.addCode("\":\" UNION SELECT \"+");
+            i=0;
+            for (Map.Entry<String, String> st:package_column_json.get(s).entrySet()) {
+                if(st.getKey().equalsIgnoreCase("sync_status")){
+                //    b13.addCode((i==0?"\"'\"+":"+\",'\"+")+sync_status.syned.ordinal()+"+\"'\"");
+
+                }else{
+                  //  b13.addCode((i==0?"\"'\"+":"+\",'\"+")+"jo.optString(\""+st.getValue()+"\")+\"'\"");
+                }
+               // b13.addCode((i==0?"\"'\"+":"+\",'\"+")+(st.getKey().equalsIgnoreCase("sync_status")?sync_status.syned.ordinal():"jo.optString(\""+st.getValue()+"\")")+"+\"'\"");
+
+                String cov=package_column_data_type.get(s).get(st.getKey()).equalsIgnoreCase("int")||package_column_data_type.get(s).get(st.getKey()).equalsIgnoreCase("double")?"":"'";
+                b13.addCode((i==0?"\""+cov+"\"+":"+\","+cov+"\"+")+(st.getKey().equalsIgnoreCase("sync_status")?sync_status.syned.ordinal():"jo.optString(\""+st.getValue()+"\")")+"+\""+cov+"\"");
+
+                i++;
+            }
+            b13.addStatement(")");
+            b13.endControlFlow();
+            b13.addStatement("qryz[m]=sb.toString()");
+            b13.endControlFlow();
+            b13.addStatement(" sb_sid.append(\")\");");
+            b13.addStatement("return new String[][]{new String[]{sb_sid.toString()},qryz}");
+//            b13.addStatement("return qryz");
+
+
+
+        }
+        b13.endControlFlow();
+        b13.addStatement("return null");
+
+
+
+
 
 
         MethodSpec.Builder b12 = MethodSpec.methodBuilder("getJsonFromCursor")
@@ -354,6 +461,7 @@ public class Anna extends AbstractProcessor {
         MethodSpec.Builder b4 = MethodSpec.methodBuilder("getTableCreateSttment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(String.class, "table_name")
+                .addParameter(Boolean.class, "copy")
                 .returns(String.class);
 
         MethodSpec.Builder b3 = MethodSpec.methodBuilder("getTableColumns")
@@ -385,7 +493,7 @@ public class Anna extends AbstractProcessor {
                     "                   ssd_"+i+".chunk_size="+s.chunk_size+";\n" +
                     "                   ssd_"+i+".download_link=\""+s.download_link+"\";\n" +
                     "                   ssd_"+i+".use_download_filter="+s.use_download_filter+";\n" +
-                    "                   ssd_"+i+".servic_type=sparta.spartaannotations.SyncDescription.service_type.values()["+s.servic_type.ordinal()+"];\n" +
+                    "                   ssd_"+i+".servic_type=com.realm.annotations.SyncDescription.service_type.values()["+s.servic_type.ordinal()+"];\n" +
                     "                   ssd_"+i+".table_filters=new String[]{"+concat_string(s.table_filters)+"};\n" +
                     "                   ssd_"+i+".table_name=\""+s.table_name+"\";\n" +
                     "                   ssd_"+i+".upload_link=\""+s.upload_link+"\";\n" +
@@ -569,7 +677,13 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
 
 
-        writePKGF(packages,sync_packages,b.build(),b2.build(),b3.build(),b4.build(),b5.build(),b6.build(),b7.build(),b8.build(),b9.build(),b10.build(),b11.build(),b12.build());
+
+
+
+
+        writePKGF(packages,sync_packages,b.build(),b2.build(),b3.build(),b4.build(),
+                b5.build(),b6.build(),b7.build(),b8.build(),b9.build(),b10.build(),
+                b11.build(),b12.build(),b13.build());
         return true;
     }
     boolean writen_dyna_file=false;
@@ -586,7 +700,8 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
                            MethodSpec getTableColumnJson,
                            MethodSpec getTables,
                            MethodSpec getObjectFromCursor,
-                           MethodSpec getJsonFromCursor) {
+                           MethodSpec getJsonFromCursor,
+                           MethodSpec getInsertStatementsFromJson) {
 
         if(writen_dyna_file){
             return;
@@ -632,6 +747,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
                 .addMethod(getTables)
                 .addMethod(getObjectFromCursor)
                 .addMethod(getJsonFromCursor)
+                .addMethod(getInsertStatementsFromJson)
 
 
                 .build();
@@ -700,7 +816,27 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
         return result;
 
     }
+ String concat_map(HashMap<String, String>  M,Boolean key)
+    {
+        String result="";
+        int i=0;
+        for(String st :key?M.keySet():M.values())
+        {
+            result=result+(i==0?"":",")+st;
+     i++;
+        }
+        return result;
 
+    }
+    String[] split_string(String str_to_split,String  character)
+    {
+        if(str_to_split.length()<1){return new String[0];}
+        if(!str_to_split.contains(character)) { return new String[]{str_to_split}; }
+       return str_to_split.split(character);
+
+
+
+    }
     private void writeSourceFile(TypeElement originatingType) {
         //get Log class from android.util package
         //This will make sure the Log class is properly imported into our class

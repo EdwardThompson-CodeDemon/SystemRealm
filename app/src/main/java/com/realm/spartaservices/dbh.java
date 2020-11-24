@@ -16,9 +16,11 @@ import com.google.common.base.Stopwatch;
 import com.google.common.reflect.ClassPath;
 import com.realm.annotations.sync_service_description;
 import com.realm.annotations.sync_status;
+import com.realm.wc.supplier_account;
 
 import net.sqlcipher.database.SQLiteDatabase;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
@@ -50,6 +52,8 @@ import sparta.realm.Dynamics.spartaDynamics;
  */
 
 public class dbh {
+
+
     static Context act;
     public static sdb_model main_db=null;
     public static SQLiteDatabase database=null;
@@ -140,7 +144,8 @@ public class dbh {
                 }
                 cursor1.close();
             } catch (Exception e) {
-                database.execSQL(spartaDynamics.getTableCreateSttment(table_name));
+                database.execSQL(spartaDynamics.getTableCreateSttment(table_name,false));
+                database.execSQL(spartaDynamics.getTableCreateSttment(table_name,true));
                 String crt_stt=spartaDynamics.getTableCreateIndexSttment(table_name);
                 if(crt_stt.length()>1&crt_stt.contains(";"))
                 {
@@ -505,7 +510,89 @@ public class dbh {
 
 
 
+    public JSONObject load_JSON_from_object(Object obj) {
 
+
+        //employee mem=new employee();
+        JSONObject jo=new JSONObject();
+
+        Field[] fieldz=concatenate(obj.getClass().getDeclaredFields(),obj.getClass().getSuperclass().getDeclaredFields());
+        for (Field field : fieldz) {
+            field.setAccessible(true); // if you want to modify private fields
+            if(field.getType()== dynamic_property.class)
+            {
+                try {
+
+                    //  Log.e("DB Field ", "" + field.getName());
+                    Class<?> clazz = field.get(obj).getClass();
+                    Field dyna_value_field = clazz.getDeclaredField("value");
+                    Field dyna_json_name_field = clazz.getDeclaredField("json_name");
+                    Field dyna_storage_mode_field = clazz.getDeclaredField("storage_mode");
+
+                    dyna_json_name_field.setAccessible(true);
+                    dyna_value_field.setAccessible(true);
+                    dyna_storage_mode_field.setAccessible(true);
+
+                    String j_key=(String) dyna_json_name_field.get(field.get(obj));
+
+                    if(j_key!=null)
+                    {
+                        int storage_mode=(int) dyna_storage_mode_field.get(field.get(obj));
+                        if(storage_mode==2){
+                            String data=get_saved_doc_base64((String)dyna_value_field.get(field.get(obj)));
+                            if(data==error_return)
+                            {
+                                Log.e("DATA ERROR =>","  :: "+data);
+
+                                //   cv.put("data_status","e");
+                                jo.put(j_key,data);
+                            }else{
+                                jo.put(j_key,data);
+
+                            }
+
+                        }else{
+                            jo.put(j_key,(String)dyna_value_field.get(field.get(obj)));
+                        }
+                    }
+
+
+                }catch (Exception ex){
+                    Log.e("REFLECTION ERROR =>","load_JSON_from_object :: "+ex.getMessage());
+                }
+            }else {
+                try {
+                    //   Log.e("CLASS ", field.getName()+ " - " + field.getType());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return jo;
+
+    }
+
+    public static String get_saved_doc_base64(String data_name)
+    {
+        String res="";
+        try {
+            String path = Environment.getExternalStorageDirectory().toString();
+
+            File file = new File(svars.WORKING_APP.file_path_employee_data, data_name);
+            //java.nio.file.Files.readAllBytes(Path path);
+            //);
+            //  res = Base64.encodeToString(s_bitmap_handler.getBytes(BitmapFactory.decodeFile(file.getAbsolutePath())), 0);
+            res = Base64.encodeToString(org.apache.commons.io.FileUtils.readFileToByteArray(file), 0);
+            return res;
+        }catch (Exception ex){
+            Log.e("Data file retreival :"," "+ex.getMessage());
+
+        }
+
+
+
+        return  res;
+    }
 
     public void register_object_auto_ann(Boolean first_record,JSONObject j_obj,sync_service_description ssd)
     {
@@ -560,7 +647,37 @@ if(ssd.service_name.equalsIgnoreCase("JobAllInventory"))
 
     }
 
+    long  register_object_auto_ann_v2(JSONArray array)
+    {
+        Stopwatch stw=new Stopwatch();
+        stw.start();
+        try {
 
+
+            String[][] ins= spartaDynamics.getInsertStatementsFromJson(array, supplier_account.class.getName());
+            String sidz_qry=ins[0][0];
+            String[] qryz=ins[1];
+            long tr_time=stw.elapsed(TimeUnit.MILLISECONDS);
+
+
+//while(dbh.database.inTransaction()){Log.e("Waiting .. ","In transaction ");}
+            dbh.database.beginTransaction();
+            for (int i=0;i<qryz.length;i++)
+            {
+                dbh.database.execSQL(qryz[i]);
+            }
+
+            dbh.database.setTransactionSuccessful();
+            dbh.database.endTransaction();
+            Log.e("Exec time ",""+(stw.elapsed(TimeUnit.MILLISECONDS)-tr_time));
+
+
+        }catch(Exception ex){
+            Log.e("Error :",""+ex.getMessage());
+
+        }
+        return stw.elapsed(TimeUnit.MILLISECONDS);
+    }
 
     public void register_dynadata(Boolean first_record, JSONObject dyna_obj, String dyna_type, String parent)
     {

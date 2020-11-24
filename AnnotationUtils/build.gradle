@@ -1,0 +1,12 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'com.amitshekhar.android:android-networking:1.0.2'
+    implementation 'io.github.willena:sqlite-jdbc:3.33.0.1'
+    implementation 'com.google.guava:guava:14.0'
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
