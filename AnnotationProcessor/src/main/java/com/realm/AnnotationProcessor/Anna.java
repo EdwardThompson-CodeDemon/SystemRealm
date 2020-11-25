@@ -3,6 +3,7 @@ package com.realm.AnnotationProcessor;
 import com.google.auto.service.AutoService;
 import com.realm.annotations.DynamicClass;
 import com.realm.annotations.DynamicProperty;
+import com.realm.annotations.RealmDataClass;
 import com.realm.annotations.SyncDescription;
 import com.realm.annotations.db_class_;
 import com.realm.annotations.sync_service_description;
@@ -728,6 +729,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
         TypeSpec spartaDynamicsClass = TypeSpec.classBuilder("spartaDynamics")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .superclass(RealmDataClass.class)
 
                 .addField(HashMap.class, "package_tables", Modifier.PUBLIC, Modifier.STATIC)
                 .addField(HashMap.class, "table_columns", Modifier.PUBLIC, Modifier.STATIC)
