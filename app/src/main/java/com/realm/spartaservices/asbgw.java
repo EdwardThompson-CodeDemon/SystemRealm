@@ -638,7 +638,7 @@ public class asbgw {
                         handler.removeCallbacks(this);
                         Looper.myLooper().quit();
                     }
-                }, 500);
+                }, 50);
 
                 Looper.loop();
             }
@@ -1269,6 +1269,140 @@ if(obj==null)
             JO.put("IsRenewalPasswordRequest", "false");
             JO.put("CurrentUser", user);
         }catch (Exception ex){}
+        Thread thread = new Thread() {
+            public void run() {
+                Looper.prepare();
+                final JSONObject[] maindata = {new JSONObject()};
+
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+
+
+                        if (svars.isInternetAvailable()) {
+                            String response = "";
+                            String error_data = "";
+                            HttpURLConnection httpURLConnection = null;
+
+                            try {
+                                Log.e("JSON ST PG =>", "" + svars.login_url);
+                                Log.e("LOGIN TX =>", "" + JO.toString());
+                                httpURLConnection = (HttpURLConnection) new URL(svars.login_url).openConnection();
+                                httpURLConnection.setRequestMethod("POST");
+                                httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                                httpURLConnection.setDoOutput(true);
+
+                                Log.e("LOGIN TX =>", "Connected");
+//ByteStreams.copy(JO.toString().getBytes(),httpURLConnection.getOutputStream());
+                                DataOutputStream wr = new DataOutputStream(httpURLConnection.getOutputStream());
+                                wr.write(JO.toString().getBytes());
+                                wr.flush();
+                                wr.close();
+                                int status = httpURLConnection.getResponseCode();
+                                Log.e("LOGIN POST RX", " status=> " + status);
+
+
+                                try {
+                                    InputStream in = httpURLConnection.getInputStream();
+                                    response = new String(ByteStreams.toByteArray(in));
+                                    Log.e("LOGIN POST RX", " => " + response);
+
+                                    maindata[0] = new JSONObject(response);
+                                    JSONObject RESULT = maindata[0].getJSONObject("Result");
+
+
+                                    if (RESULT.getBoolean("IsOkay")) {
+
+                                        svars.set_Service_token(act, httpURLConnection.getHeaderField("authorization"));
+                                        ssi.on_status_changed(act.getString(R.string.authenticated));
+                                        ssi.on_status_code_changed(1);
+
+                                        launch_services();
+
+
+                                    } else {
+                                        ssi.on_status_changed(act.getString(R.string.authentication_error));
+                                        ssi.on_status_code_changed(666);
+                                        ssi.on_status_code_changed(4);
+                                        sdb.database.execSQL("DELETE FROM user_table WHERE sid ='" + svars.user_id(act) + "'");
+
+                                        //   sdb.logout_user();
+                                        android.os.Process.killProcess(android.os.Process.myPid());
+
+                                    }
+                                    Log.e("JSON REC =>", "" + response);
+
+
+                                    Log.e("JSON TOKEN =>", "" + httpURLConnection.getHeaderField("authorization"));
+                                } catch (Exception ex) {
+                                    InputStream error = httpURLConnection.getErrorStream();
+                                    InputStreamReader inputStreamReader2 = new InputStreamReader(error);
+
+                                    int inputStreamData2 = inputStreamReader2.read();
+                                    while (inputStreamData2 != -1) {
+                                        char current = (char) inputStreamData2;
+                                        inputStreamData2 = inputStreamReader2.read();
+                                        error_data += current;
+                                    }
+                                    ssi.on_status_changed(act.getString(R.string.authentication_error));
+                                    ssi.on_status_code_changed(666);
+                                    ssi.on_status_code_changed(4);
+
+                                    Log.e("REG POST TX error =>", " " + error_data);
+                                    Log.e("JSON POST TX error =>", " " + error_data);
+                                    //JSONObject jo = new JSONObject(error_data);
+                                }
+
+
+                            } catch (final Exception e) {
+
+                                Log.e("Creds enquiry error", "" + e.getMessage());
+                                ssi.on_status_changed(act.getString(R.string.authentication_error));
+                                ssi.on_status_code_changed(666);
+                                ssi.on_status_code_changed(4);
+                            }
+                        } else {
+
+
+                            ssi.on_status_changed(act.getString(R.string.internet_connection_error));
+                            ssi.on_status_code_changed(4);
+                            ssi.on_status_code_changed(666);
+
+                        }
+                    }
+                }, 10);
+
+                Looper.loop();
+            }
+        };
+        thread.start();
+
+
+    }
+
+   void renew_token_()
+    {
+        ssi.on_status_changed(act.getString(R.string.authenticating));
+        final JSONObject JO=new JSONObject();
+
+        JSONObject user=new JSONObject();
+        try {
+            SharedPreferences prefs = act.getSharedPreferences(svars.sharedprefsname, act.MODE_PRIVATE);
+
+
+            user.put("PassWord", prefs.getString("pass", ""));
+            user.put("UserName", prefs.getString("username", ""));
+            user.put("Branch", svars.WORKING_APP.ACCOUNT_BRANCH);
+            user.put("AccountName", svars.WORKING_APP.ACCOUNT);
+            user.put("Language", "English");
+
+
+
+            JO.put("IsRenewalPasswordRequest", "false");
+            JO.put("CurrentUser", user);
+        }catch (Exception ex){}
         new AsyncTask() {
             JSONObject maindata;
 
@@ -1289,9 +1423,9 @@ if(obj==null)
                         httpURLConnection.setDoOutput(true);
 
                         Log.e("LOGIN TX =>", "Connected" );
-
+//ByteStreams.copy(JO.toString().getBytes(),httpURLConnection.getOutputStream());
                         DataOutputStream wr = new DataOutputStream(httpURLConnection.getOutputStream());
-                        wr.writeBytes(JO.toString());
+                        wr.write(JO.toString().getBytes());
                         wr.flush();
                         wr.close();
                         int status = httpURLConnection.getResponseCode();
