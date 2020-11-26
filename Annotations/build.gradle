@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation files('D:\\android-database-sqlcipher-4.4.1-sources.jar')
+
     compile group: 'org.json', name: 'json', version: '20201115'
 
 }
