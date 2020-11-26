@@ -289,12 +289,11 @@ public class Anna extends AbstractProcessor {
 
 
         MethodSpec.Builder b13= MethodSpec.methodBuilder("getInsertStatementsFromJson")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(jsonArray, "array")
                 .addParameter(String.class, "package_name")
                 .addJavadoc("Returns most efficient direct insert queries as per sqlite 3.7 /nAdjust database compound Limit for optimization")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addException(ClassName.get("org.json","JSONException"))
+                 .addException(ClassName.get("org.json","JSONException"))
                 .returns(String[][].class)
                 .addCode("if(array.length()==0){return new String[][]{{\"()\",\"\"},{}};}")
                 .addStatement("int compound_limit=500")
@@ -385,7 +384,7 @@ public class Anna extends AbstractProcessor {
 
 
         MethodSpec.Builder b12 = MethodSpec.methodBuilder("getJsonFromCursor")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addException(ClassName.get("org.json","JSONException"))
                 .addParameter(cursor, "c")
                 .addParameter(String.class, "package_name")
@@ -405,12 +404,12 @@ public class Anna extends AbstractProcessor {
 
 
         MethodSpec.Builder b10 = MethodSpec.methodBuilder("getTables")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .returns(String[].class)
                 .addStatement("return new String[]{"+concat_string(tables)+"}");
 
         MethodSpec.Builder b9 = MethodSpec.methodBuilder("getTableColumnJson")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .returns(String[][][].class)
                 .addStatement("return new String[][][]{"+concat_string_p(table_column_json)+"}");
 
@@ -420,7 +419,7 @@ public class Anna extends AbstractProcessor {
 
 
         MethodSpec.Builder b8= MethodSpec.methodBuilder("getContentValuesFromJson")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(jsonObject, "json")
                 .addParameter(String.class, "table_name")
                 .addJavadoc("Returns true if the json does not have the active key defined in db_class or if the json has the key and the value is true")
@@ -436,7 +435,7 @@ public class Anna extends AbstractProcessor {
                 .returns(ClassName.get("android.content","ContentValues"));
 
         MethodSpec.Builder b7= MethodSpec.methodBuilder("jsonHasActiveKey")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(jsonObject, "json")
                 .addJavadoc("Returns true if the json does not have the active key defined in db_class or if the json has the key and the value is true")
                 .addComment("custom comment")
@@ -449,31 +448,31 @@ public class Anna extends AbstractProcessor {
 
 
         MethodSpec.Builder b6 = MethodSpec.methodBuilder("getDeleteRecordSttment")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "table_name")
                 .addParameter(String.class, "sid")
                 .returns(String.class);
 
         MethodSpec.Builder b5 = MethodSpec.methodBuilder("getTableCreateIndexSttment")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "table_name")
                 .returns(String.class);
 
         MethodSpec.Builder b4 = MethodSpec.methodBuilder("getTableCreateSttment")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "table_name")
                 .addParameter(Boolean.class, "copy")
                 .returns(String.class);
 
         MethodSpec.Builder b3 = MethodSpec.methodBuilder("getTableColumns")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "table_name")
                 .returns(hash_map_parammd)
                 .addStatement("$T map = new $T<>()", hash_map_parammd, hashmap);
 
 
         MethodSpec.Builder b2 = MethodSpec.methodBuilder("getPackageTable")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "package_name")
                 .returns(String.class)
                 .beginControlFlow("if (package_tables==null)")
@@ -481,7 +480,7 @@ public class Anna extends AbstractProcessor {
 
 
         MethodSpec.Builder b = MethodSpec.methodBuilder("getSyncDescription")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .returns(result)
                 .addStatement("$T result = new $T<>()", result, arrayList);
 
@@ -713,12 +712,12 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
 
         MethodSpec getDynamicClassPaths = MethodSpec.methodBuilder("getDynamicClassPaths")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .returns(String[].class)
                 .addStatement("return new String[]{"+concat_string(all_packages)+"}")
                 .build();
         MethodSpec getDynamicSyncClassPaths = MethodSpec.methodBuilder("getDynamicSyncClassPaths")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .returns(String[].class)
                 .addStatement("return new String[]{"+concat_string(sync_packages)+"}")
                 .build();
@@ -731,10 +730,10 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .superclass(RealmDataClass.class)
 
-                .addField(HashMap.class, "package_tables", Modifier.PUBLIC, Modifier.STATIC)
-                .addField(HashMap.class, "table_columns", Modifier.PUBLIC, Modifier.STATIC)
-                .addField(String[].class, "tables", Modifier.PUBLIC, Modifier.STATIC)
-                .addField(String[][][].class, "table_column_json", Modifier.PUBLIC, Modifier.STATIC)//generate string and declare here
+//                .addField(HashMap.class, "package_tables", Modifier.PUBLIC, Modifier.STATIC)
+//                .addField(HashMap.class, "table_columns", Modifier.PUBLIC, Modifier.STATIC)
+//                .addField(String[].class, "tables", Modifier.PUBLIC, Modifier.STATIC)
+//                .addField(String[][][].class, "table_column_json", Modifier.PUBLIC, Modifier.STATIC)//generate string and declare here
                 .addMethod(getDynamicClassPaths)
                 .addMethod(getDynamicSyncClassPaths)
                 .addMethod(getSyncDescription)

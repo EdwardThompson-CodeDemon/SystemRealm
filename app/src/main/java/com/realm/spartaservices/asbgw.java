@@ -51,7 +51,7 @@ import dalvik.system.DexFile;
 
 import sparta.realm.Dynamics.spartaDynamics;
 
-
+import static com.realm.SpartaApplication.realm;
 
 
 public class asbgw {
@@ -239,7 +239,7 @@ public class asbgw {
         try {
 
 
-            for(sync_service_description ssd_t: spartaDynamics.getSyncDescription()){
+            for(sync_service_description ssd_t: realm.getSyncDescription()){
                 if(ssd_t==null){continue;}
                 switch (ssd_t.servic_type){
                     case Download:
@@ -561,7 +561,7 @@ public class asbgw {
                         Log.e(ssd.service_name + " :: RX", "IS OK " + den);
                         if (den>=0){
                            // synchronized (this) {
-                                String[][] ins = spartaDynamics.getInsertStatementsFromJson(temp_ar,ssd.object_package);
+                                String[][] ins = realm.getInsertStatementsFromJson(temp_ar,ssd.object_package);
                                 String sidz = ins[0][0];
                                 String[] qryz = ins[1];
                                 int q_length=qryz.length;

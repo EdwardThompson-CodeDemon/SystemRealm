@@ -1,3 +1,4 @@
+include ':DataRealm'
 include ':AnnotationUtils'
 include ':Annotations'
 include ':AnnotationProcessor'

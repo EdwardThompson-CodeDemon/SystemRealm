@@ -7,18 +7,21 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.realm.annotations.RealmDataClass;
 import com.realm.spartaservices.dbh;
 
+import sparta.realm.Dynamics.spartaDynamics;
 
 
 public class SpartaApplication extends Application {
 
     private static Context appContext;
-
+    public static RealmDataClass realm;
     @Override
     public void onCreate() {
         super.onCreate();
         appContext = getApplicationContext();
+        realm=realm==null?new spartaDynamics():realm;
         Thread.setDefaultUncaughtExceptionHandler(new SpartaApplicationErrorHandler(appContext));
         String[] supportedABIS = Build.SUPPORTED_ABIS; // Return an ordered list of ABIs supported by this device.
 for (String abi:supportedABIS) {

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Environment;
+import android.os.Parcel;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
@@ -46,6 +47,8 @@ import java.util.concurrent.TimeUnit;
 import dalvik.system.DexFile;
 import sparta.realm.Dynamics.spartaDynamics;
 
+import static com.realm.SpartaApplication.realm;
+
 
 /**
  * Created by Thompsons on 01-Feb-17.
@@ -53,12 +56,13 @@ import sparta.realm.Dynamics.spartaDynamics;
 
 public class dbh {
 
-
+    Parcel myParcel = Parcel.obtain();
     static Context act;
     public static sdb_model main_db=null;
     public static SQLiteDatabase database=null;
     public static dbh sd;
     public static boolean loaded_db=false;
+    spartaDynamics sdy=new spartaDynamics();
     public dbh(Context act)
     {
         this.act=act;
@@ -128,12 +132,12 @@ public class dbh {
 
 
 
-        for (String s: spartaDynamics.getDynamicClassPaths()) {
+        for (String s: sdy.getDynamicClassPaths()) {
 
 
             Log.e("Classes reflected =>", "Ann :" + s);
 
-            String table_name=spartaDynamics.getPackageTable(s);
+            String table_name=realm.getPackageTable(s);
             try {
                 Cursor cursor1 = database.rawQuery("SELECT * FROM "+table_name, null);
                 cursor1.moveToFirst();
@@ -144,9 +148,9 @@ public class dbh {
                 }
                 cursor1.close();
             } catch (Exception e) {
-                database.execSQL(spartaDynamics.getTableCreateSttment(table_name,false));
-                database.execSQL(spartaDynamics.getTableCreateSttment(table_name,true));
-                String crt_stt=spartaDynamics.getTableCreateIndexSttment(table_name);
+                database.execSQL(realm.getTableCreateSttment(table_name,false));
+                database.execSQL(realm.getTableCreateSttment(table_name,true));
+                String crt_stt=realm.getTableCreateIndexSttment(table_name);
                 if(crt_stt.length()>1&crt_stt.contains(";"))
                 {
 
@@ -166,7 +170,7 @@ public class dbh {
                 continue;
             }
 
-            for (Map.Entry<String, String> col : spartaDynamics.getTableColumns(table_name).entrySet()) {
+            for (Map.Entry<String, String> col : realm.getTableColumns(table_name).entrySet()) {
                 try {
                     Cursor cursor1 = database.rawQuery("SELECT count(" + col.getKey() + ") FROM "+table_name, null);
                     cursor1.moveToFirst();
@@ -492,7 +496,7 @@ public class dbh {
 
                 try {
 
-                    objs.add(spartaDynamics.getJsonFromCursor(c,ssd.object_package));
+                    objs.add(realm.getJsonFromCursor(c,ssd.object_package));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -615,17 +619,17 @@ public class dbh {
             try{
                 if(ssd.use_download_filter)
                 {
-                    database.execSQL(spartaDynamics.getDeleteRecordSttment(ssd.table_name,j_obj.getString("id")));
+                    database.execSQL(realm.getDeleteRecordSttment(ssd.table_name,j_obj.getString("id")));
                 }
 
             }catch(Exception ex){
 
                 Log.e("DELETING ERROR =>",""+ex.getMessage());
             }
-            if(spartaDynamics.jsonHasActiveKey(j_obj))
+            if(realm.jsonHasActiveKey(j_obj))
             {
 
-                ContentValues cv= spartaDynamics.getContentValuesFromJson(j_obj,ssd.table_name);
+                ContentValues cv= (ContentValues)realm.getContentValuesFromJson(j_obj,ssd.table_name);
                 cv.put("sync_status", sync_status.syned.ordinal());
 
                 Log.e(ssd.service_name+":: Insert result =>"," "+database.insert(ssd.table_name, null, cv));
@@ -654,7 +658,7 @@ if(ssd.service_name.equalsIgnoreCase("JobAllInventory"))
         try {
 
 
-            String[][] ins= spartaDynamics.getInsertStatementsFromJson(array, supplier_account.class.getName());
+            String[][] ins= realm.getInsertStatementsFromJson(array, supplier_account.class.getName());
             String sidz_qry=ins[0][0];
             String[] qryz=ins[1];
             long tr_time=stw.elapsed(TimeUnit.MILLISECONDS);

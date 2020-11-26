@@ -15,6 +15,7 @@ import com.google.common.base.Stopwatch;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.realm.annotations.RealmDataClass;
 import com.realm.spartaservices.asbgw;
 import com.realm.spartaservices.dbh;
 import com.realm.spartaservices.svars;
@@ -34,6 +35,8 @@ import org.json.JSONObject;
 import java.util.concurrent.TimeUnit;
 
 import sparta.realm.Dynamics.spartaDynamics;
+
+import static com.realm.SpartaApplication.realm;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,7 +75,7 @@ Activity act;
 
             }
         });
-        //as.InitialiseAutosync();
+        as.InitialiseAutosync();
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,7 +113,19 @@ Activity act;
 //
 //        Log.e("gson :",""+insert_from(resp));
     //    do_multi_th ();
+       // test_realm();
     }
+
+    void test_realm(){
+
+        for (String s: realm.getDynamicClassPaths()) {
+
+
+            Log.e("Classes reflected =>", "Realm :" + s);
+        }
+
+    }
+
     void do_multi_th ()
     {
         String resp=response(1000).toString();
@@ -138,7 +153,7 @@ Activity act;
             JSONArray array=job.getJSONArray("Result");
             synchronized (this){
 
-                String[][] ins= spartaDynamics.getInsertStatementsFromJson(array, supplier_account.class.getName());
+                String[][] ins= realm.getInsertStatementsFromJson(array, supplier_account.class.getName());
                 String sidz_qry=ins[0][0];
                 String[] qryz=ins[1];
             long tr_time=stw.elapsed(TimeUnit.MILLISECONDS);
