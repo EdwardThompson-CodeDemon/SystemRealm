@@ -3,7 +3,7 @@ apply plugin: 'java-library'
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile group: 'org.json', name: 'json', version: '20201115'
+    implementation group: 'org.json', name: 'json', version: '20201115'
 
 }
 

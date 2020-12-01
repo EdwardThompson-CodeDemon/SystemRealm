@@ -9,7 +9,7 @@ android {
     buildToolsVersion "30.0.2"
 
     defaultConfig {
-//        applicationId "com.realm"
+       applicationId "com.realm"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 1

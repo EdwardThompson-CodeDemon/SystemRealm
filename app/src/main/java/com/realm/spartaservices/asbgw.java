@@ -49,7 +49,8 @@ import java.util.concurrent.TimeUnit;
 import dalvik.system.DexFile;
 
 
-import sparta.realm.Dynamics.spartaDynamics;
+
+
 
 import static com.realm.SpartaApplication.realm;
 
@@ -113,28 +114,28 @@ public class asbgw {
 
     public interface SynchronizationHandler
     {
-        Boolean OnRequestToSync();
-        ArrayList<JSONObject> OnAboutToUploadObjects(sync_service_description ssd, ArrayList<JSONObject> objects);
-        JSONObject OnUploadingObject(sync_service_description ssd, JSONObject object);
+        default Boolean OnRequestToSync(){return true;}
+        default ArrayList<JSONObject> OnAboutToUploadObjects(sync_service_description ssd, ArrayList<JSONObject> objects)
+        {
+            return objects;
+        }
+       default JSONObject OnUploadingObject(sync_service_description ssd, JSONObject object) {
+           return object;
+       }
+      default JSONObject OnUploadedObject(sync_service_description ssd,JSONObject object, JSONObject response) {
+
+           return response;
+       }
+  default ANError OnUploadedObjectError(sync_service_description ssd,JSONObject object, ANError error) {
+           return error;
+       }
+ default JSONObject OnAboutToDownload(sync_service_description ssd, JSONObject filter) {
+           return filter;
+       }
 
 
     }
-    static SynchronizationHandler Main_handler=new SynchronizationHandler() {
-        @Override
-        public Boolean OnRequestToSync() {
-            return null;
-        }
-
-        @Override
-        public ArrayList<JSONObject> OnAboutToUploadObjects(sync_service_description ssd, ArrayList<JSONObject> objects) {
-            return objects;
-        }
-
-        @Override
-        public JSONObject OnUploadingObject(sync_service_description ssd, JSONObject object) {
-            return object;
-        }
-    };
+    static SynchronizationHandler Main_handler=new SynchronizationHandler() {};
     public interface sync_status_interface
     {
         void on_status_code_changed(int status);
@@ -906,7 +907,8 @@ if(obj==null)
 
 
                 }
-                JSONObject upload_object = sdb.load_JSON_from_object(obj);
+                JSONObject upload_object = obj;
+//                JSONObject upload_object = sdb.load_JSON_from_object(obj);
                 Log.e(ssd.service_name+":: upload::"," "+upload_object.toString());
                 String lid=null;
                 try {
@@ -937,6 +939,16 @@ if(obj==null)
                                     public void onResponse(JSONObject response) {
                                         Log.e("Response =>", "" + response.toString());
 
+                                          response=Main_handler.OnUploadedObject(ssd,upload_object,response);
+                                        if(response==null)
+                                        {
+                                            update_counter(ssd,pending_records_filter);
+                                            upload_counter[0]++;
+                                            if (upload_counter[0] ==upload_length) {
+                                                upload_(ssd);
+                                            }
+                                            return;
+                                        }
                                         try {
 
 
@@ -951,32 +963,11 @@ if(obj==null)
                                                 sdb.database.update(table_name, cv, "id=" + finalLid, null);
 
 
-                                                sync_complete_counter++;
-                                                sync_success_counter++;
-                                                Log.e(ssd.service_name+" ::", "Sync counter" + sync_complete_counter);
-                                                double denm = (double) sync_sum_counter;
-                                                int pending_data_count = Integer.parseInt(sdb.get_record_count(table_name, pending_records_filter));
-
-
-                                                ssi.on_status_changed(pending_data_count == 0 ? act.getResources().getString(R.string.synchronized_local)+ssd.service_name : act.getResources().getString(R.string.synchronizing)+ssd.service_name +act.getResources().getString(R.string.pending_data) + pending_data_count);
-
-                                                double num = (double) sync_complete_counter;
-                                                double per = (num / denm) * 100.0;
-                                                ssi.on_main_percentage_changed((int) per);
-                                                if(per==100.0)
-                                                {
-                                                    ssi.on_main_percentage_changed(100);
-                                                    ssi.on_status_changed(act.getResources().getString(R.string.synchronization_complete));
-                                                    ssi.on_secondary_progress_changed(100);
-                                                    ssi.on_main_percentage_changed(100);
-                                                    ssi.on_info_updated(act.getResources().getString(R.string.synchronization_complete));
-                                                    ssi.on_status_code_changed(3);
-                                                }
+                                               update_counter(ssd,pending_records_filter);
                                                 upload_counter[0]++;
                                                 if (upload_counter[0] ==upload_length) {
                                                     upload_(ssd);
                                                 }
-
 
                                             }else {
                                                 ssi.on_status_changed("Update failed ...  =>" + finalLid);
@@ -997,12 +988,18 @@ if(obj==null)
                                     @Override
                                     public void onError(ANError anError) {
                                         Log.e("Response error=>", ssd.service_name+":: upload =>" + anError.getErrorBody());
-                                        ssi.on_status_code_changed(666);
+                                        anError=Main_handler.OnUploadedObjectError(ssd,upload_object,anError);
+                                        if(anError==null)
+                                        {
+                                            update_counter(ssd,pending_records_filter);
+                                            upload_counter[0]++;
+                                            if (upload_counter[0] ==upload_length) {
+                                                upload_(ssd);
+                                            }
+return;
+                                        }
+
                                         ContentValues cv = new ContentValues();
-
-                                        cv.put("data_status", "e");
-
-                                        sdb.database.update(table_name, cv, "id=" + finalLid, null);
                                         if(anError.getErrorBody().contains("Record Exist"))
                                         {
                                             ssi.on_status_changed("Synchronizing");
@@ -1012,6 +1009,17 @@ if(obj==null)
                                             cv = new ContentValues();
                                             cv.put("sync_status", sync_status.syned.ordinal());
 
+
+                                            sdb.database.update(table_name, cv, "id=" + finalLid, null);
+                                            update_counter(ssd,pending_records_filter);
+                                            upload_counter[0]++;
+                                            if (upload_counter[0] ==upload_length) {
+                                                upload_(ssd);
+                                            }
+                                        }else {
+                                            ssi.on_status_code_changed(666);
+
+                                            cv.put("data_status", "e");
 
                                             sdb.database.update(table_name, cv, "id=" + finalLid, null);
 
@@ -1031,6 +1039,32 @@ if(obj==null)
             }
         }
 
+
+    }
+
+    static void update_counter(sync_service_description ssd,String [] pending_records_filter)
+    {
+        sync_complete_counter++;
+        sync_success_counter++;
+        Log.e(ssd.service_name+" ::", "Sync counter" + sync_complete_counter);
+        double denm = (double) sync_sum_counter;
+        int pending_data_count = Integer.parseInt(sdb.get_record_count(ssd.table_name, pending_records_filter));
+
+
+        ssi.on_status_changed(pending_data_count == 0 ? act.getResources().getString(R.string.synchronized_local)+ssd.service_name : act.getResources().getString(R.string.synchronizing)+ssd.service_name +act.getResources().getString(R.string.pending_data) + pending_data_count);
+
+        double num = (double) sync_complete_counter;
+        double per = (num / denm) * 100.0;
+        ssi.on_main_percentage_changed((int) per);
+        if(per==100.0)
+        {
+            ssi.on_main_percentage_changed(100);
+            ssi.on_status_changed(act.getResources().getString(R.string.synchronization_complete));
+            ssi.on_secondary_progress_changed(100);
+            ssi.on_main_percentage_changed(100);
+            ssi.on_info_updated(act.getResources().getString(R.string.synchronization_complete));
+            ssi.on_status_code_changed(3);
+        }
 
     }
   public static void upload_2(sync_service_description ssd)

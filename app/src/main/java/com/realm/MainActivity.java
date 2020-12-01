@@ -75,7 +75,7 @@ Activity act;
 
             }
         });
-        as.InitialiseAutosync();
+        //as.InitialiseAutosync();
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,13 +105,15 @@ Activity act;
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
-//        String resp=response(10000).toString();
-//
-//        Log.e("Deleting :","Deleting");
-//        dbh.database.execSQL("DELETE FROM TBL_supplier_account");
-//        Log.e("Deleted :","Deleted");
-//
-//        Log.e("gson :",""+insert_from(resp));
+        String resp=response(1000).toString();
+        Log.e("Data size :"," "+resp.getBytes().length);
+
+        Log.e("Deleting :","Deleting");
+        dbh.database.execSQL("PRAGMA cache_size=-3000");
+        dbh.database.execSQL("DELETE FROM TBL_supplier_account");
+        Log.e("Deleted :","Deleted");
+
+        Log.e("gson :",""+insert_from(resp));
     //    do_multi_th ();
        // test_realm();
     }
@@ -157,17 +159,24 @@ Activity act;
                 String sidz_qry=ins[0][0];
                 String[] qryz=ins[1];
             long tr_time=stw.elapsed(TimeUnit.MILLISECONDS);
-array=null;
-
+//array=null;
+//ins=null;
 //while(dbh.database.inTransaction()){Log.e("Waiting .. ","In transaction ");}
 
             dbh.database.beginTransaction();
                 dbh.database.execSQL("INSERT INTO CP_TBL_supplier_account SELECT * FROM TBL_supplier_account WHERE sid in "+sidz_qry+" AND sync_status=2");
+//int ins_sz=sidz_qry.getBytes().length;
 
                 for (int i=0;i<qryz.length;i++)
             {
-                dbh.database.execSQL(qryz[i]);
+                  dbh.database.execSQL(qryz[i]);
+             //   ins_sz+=qryz[i].getBytes().length;
+
             }
+//                ins=null;
+//                qryz=null;
+//                sidz_qry=null;
+             //   Log.e("Trans size ",""+ins_sz);
 
                 dbh.database.execSQL("REPLACE INTO TBL_supplier_account SELECT * FROM CP_TBL_supplier_account");
                 dbh.database.execSQL("DELETE FROM CP_TBL_supplier_account");

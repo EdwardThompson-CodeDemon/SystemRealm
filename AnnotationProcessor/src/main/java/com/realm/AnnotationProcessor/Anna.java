@@ -645,7 +645,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
         }
         b11.endControlFlow();
 
-        b11.addStatement("return null");
+        b11.addStatement("return colz");
 
 
 
