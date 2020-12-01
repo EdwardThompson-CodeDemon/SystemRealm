@@ -394,7 +394,7 @@ public class Anna extends AbstractProcessor {
                 .beginControlFlow("switch(package_name)");
 
         MethodSpec.Builder b11 = MethodSpec.methodBuilder("getObjectFromCursor")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(Object.class, "o")
                 .addParameter(String.class, "package_name")
                 .returns(Object.class)
