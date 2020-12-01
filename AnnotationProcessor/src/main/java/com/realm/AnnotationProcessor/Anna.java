@@ -395,9 +395,10 @@ public class Anna extends AbstractProcessor {
 
         MethodSpec.Builder b11 = MethodSpec.methodBuilder("getObjectFromCursor")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(cursor, "c")
+                .addParameter(Object.class, "o")
                 .addParameter(String.class, "package_name")
                 .returns(Object.class)
+                .addStatement("Cursor c=  (Cursor)o")
                 .addStatement("List<String> colz=  Arrays.asList(c.getColumnNames())")
                 .beginControlFlow("switch(package_name)");
 
