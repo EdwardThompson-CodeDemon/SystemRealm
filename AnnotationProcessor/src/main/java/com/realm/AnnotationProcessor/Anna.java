@@ -657,7 +657,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
 
             b12.addCode("case \""+s+"\" :\n");
-            for (Map.Entry<String, String> st:package_data_columns.get(s).entrySet()) {
+            for (Map.Entry<String, String> st:package_column_json.get(s).entrySet()) {
                 b12.beginControlFlow("try");
                 b12.addStatement("obj.put(\""+st.getKey()+"\",c."+(package_data_datatype.get(s).get(st.getKey()).equalsIgnoreCase("int")?"getInt":"getString")+"(colz.indexOf(\""+st.getValue()+"\")))");
 
