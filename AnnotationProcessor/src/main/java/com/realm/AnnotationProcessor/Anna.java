@@ -386,9 +386,10 @@ public class Anna extends AbstractProcessor {
         MethodSpec.Builder b12 = MethodSpec.methodBuilder("getJsonFromCursor")
                 .addModifiers(Modifier.PUBLIC)
                 .addException(ClassName.get("org.json","JSONException"))
-                .addParameter(cursor, "c")
+                .addParameter(Object.class, "o")
                 .addParameter(String.class, "package_name")
                 .returns(jsonObject)
+                .addStatement(" Cursor c=(Cursor)o")
                 .addStatement("List<String> colz=  Arrays.asList(c.getColumnNames())")
                 .addStatement("JSONObject obj=new JSONObject()")
                 .beginControlFlow("switch(package_name)");
