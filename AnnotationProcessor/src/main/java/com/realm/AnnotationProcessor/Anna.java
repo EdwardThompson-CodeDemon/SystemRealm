@@ -732,7 +732,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .superclass(RealmDataClass.class)
 
-//                .addField(HashMap.class, "package_tables", Modifier.PUBLIC, Modifier.STATIC)
+                .addField(ClassName.get("android.database","Cursor"), "a_c", Modifier.PUBLIC, Modifier.STATIC)
 //                .addField(HashMap.class, "table_columns", Modifier.PUBLIC, Modifier.STATIC)
 //                .addField(String[].class, "tables", Modifier.PUBLIC, Modifier.STATIC)
 //                .addField(String[][][].class, "table_column_json", Modifier.PUBLIC, Modifier.STATIC)//generate string and declare here
