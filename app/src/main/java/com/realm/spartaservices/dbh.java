@@ -459,6 +459,7 @@ public class dbh {
 
         Cursor c = database.rawQuery("SELECT * FROM "+ssd.table_name+(table_filters==null?"":" "+conccat_sql_filters(table_filters))+" ORDER BY data_status DESC LIMIT "+ssd.chunk_size, null);
 
+        spartaDynamics sd=new spartaDynamics();
 
         if (c.moveToFirst()) {
             do {
@@ -466,7 +467,7 @@ public class dbh {
 
                 try {
 
-                    objs.add(spartaDynamics.getObjectFromCursor(c,ssd.object_package));
+                    objs.add(sd.getObjectFromCursor(c,ssd.object_package));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

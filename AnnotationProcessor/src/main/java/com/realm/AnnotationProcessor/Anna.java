@@ -207,10 +207,19 @@ public class Anna extends AbstractProcessor {
             HashMap<String,String> column_datatype=new HashMap<>();
             HashMap<String,String[]> data_datatype_column_json=new HashMap<>();
 
-
-            Element super_element=processingEnv.getTypeUtils().asElement(((TypeElement)element).getSuperclass());
+            Element sel=processingEnv.getTypeUtils().asElement(((TypeElement)element).getSuperclass());
             List<Element> all_elements=new ArrayList<>(element.getEnclosedElements());
-            all_elements.addAll(super_element.getEnclosedElements());
+            all_elements.addAll(sel.getEnclosedElements());
+//            sel=processingEnv.getTypeUtils().asElement(((TypeElement)sel).getSuperclass());
+//all_elements.addAll(sel.getEnclosedElements());
+
+            while(!sel.getSimpleName().toString().equalsIgnoreCase("object"))
+{
+    sel=processingEnv.getTypeUtils().asElement(((TypeElement)sel).getSuperclass());
+all_elements.addAll(sel.getEnclosedElements());
+}
+//            Element super_element=processingEnv.getTypeUtils().asElement(((TypeElement)element).getSuperclass());
+             messager.printMessage(Diagnostic.Kind.NOTE, sel.getSimpleName()+" Super el");
             String create_sttm = "CREATE TABLE \\\"\"+(copy?\"CP_\":\"\")+\""+ann.table_name()+"\\\"";
             String create_index_sttm = "";
             String qry="DELETE FROM "+ann.table_name()+" WHERE ("+sid_column+"='\"+sid+\"' OR "+sid_column+"=\"+sid+\") AND sync_status='"+ sync_status.syned.ordinal()+"'";
