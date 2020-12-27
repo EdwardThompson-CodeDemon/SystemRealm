@@ -101,6 +101,7 @@ public class Anna extends AbstractProcessor {
         HashMap<String,HashMap<String,String>> package_json_column=new HashMap<>();
         HashMap<String,HashMap<String,String>> package_column_json=new HashMap<>();
        HashMap<String,HashMap<String,String>> package_column_data_type=new HashMap<>();
+       HashMap<String,HashMap<String,String[]>> package_data_datatype_column_json=new HashMap<>();
 
         messager.printMessage(Diagnostic.Kind.NOTE, "Launched generated variables");
 
@@ -204,6 +205,9 @@ public class Anna extends AbstractProcessor {
             HashMap<String,String> json_column=new HashMap<>();
             HashMap<String,String> column_json=new HashMap<>();
             HashMap<String,String> column_datatype=new HashMap<>();
+            HashMap<String,String[]> data_datatype_column_json=new HashMap<>();
+
+
             Element super_element=processingEnv.getTypeUtils().asElement(((TypeElement)element).getSuperclass());
             List<Element> all_elements=new ArrayList<>(element.getEnclosedElements());
             all_elements.addAll(super_element.getEnclosedElements());
@@ -234,7 +238,8 @@ public class Anna extends AbstractProcessor {
                         column_datatype.put(column_name,field.asType().toString());
 
                     }
-                    json_column.put(dp.json_key(),column_name);
+                    data_datatype_column_json.put(field.getSimpleName().toString(),new String[]{field.asType().toString(),column_name,dp.json_key()});
+                json_column.put(dp.json_key(),column_name);
                     messager.printMessage(Diagnostic.Kind.NOTE, "Field kind "+field.asType().toString()+" is  OK "+packages.size());
                     if(!started){
                         started=true;
@@ -285,7 +290,7 @@ public class Anna extends AbstractProcessor {
             package_json_column.put(packag_nm,json_column);
             package_column_json.put(packag_nm,column_json);
             package_column_data_type.put(packag_nm,column_datatype);
-
+            package_data_datatype_column_json.put(packag_nm,data_datatype_column_json);
 
             writeSourceFile(typeElement);
         }
@@ -676,9 +681,10 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
 //            for (Map.Entry<String, String> st:package_column_json.get(s).entrySet()) {
 
-                for (Map.Entry<String, String> st:package_data_columns.get(s).entrySet()) {
+                for (Map.Entry<String, String[]> st:package_data_datatype_column_json.get(s).entrySet()) {
                 b12.beginControlFlow("try");
-                b12.addStatement("obj.put(\""+st.getKey()+"\",c."+(package_data_datatype.get(s).get(st.getKey()).equalsIgnoreCase("int")?"getInt":"getString")+"(colz.indexOf(\""+st.getValue()+"\")))");
+//                b12.addStatement("obj.put(\""+st.getKey()+"\",c."+(package_data_datatype.get(s).get(st.getKey()).equalsIgnoreCase("int")?"getInt":"getString")+"(colz.indexOf(\""+st.getValue()+"\")))");
+                b12.addStatement("obj.put(\""+st.getValue()[2]+"\",c."+(st.getValue()[0].equalsIgnoreCase("int")?"getInt":"getString")+"(colz.indexOf(\""+st.getValue()[1]+"\")))");
 
 
                 b12.nextControlFlow("finally");
