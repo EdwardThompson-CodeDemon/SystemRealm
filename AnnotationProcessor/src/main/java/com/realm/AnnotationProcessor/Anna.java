@@ -17,10 +17,12 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +39,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 
 @AutoService(Processor.class)
@@ -65,6 +68,19 @@ public class Anna extends AbstractProcessor {
         initd=true;
     }
     boolean initd=false;
+
+    static Set<Element> getAnnotatedElements(
+            Elements elements,
+            TypeElement type,
+            Class<? extends Annotation> annotation)
+    {
+        Set<Element> found = new HashSet<Element>();
+        for (Element e : elements.getAllMembers(type)) {
+            if (e.getAnnotation(annotation) != null)
+                found.add(e);
+        }
+        return found;
+    }
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
 
@@ -657,7 +673,10 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
 
             b12.addCode("case \""+s+"\" :\n");
-            for (Map.Entry<String, String> st:package_column_json.get(s).entrySet()) {
+
+//            for (Map.Entry<String, String> st:package_column_json.get(s).entrySet()) {
+
+                for (Map.Entry<String, String> st:package_data_columns.get(s).entrySet()) {
                 b12.beginControlFlow("try");
                 b12.addStatement("obj.put(\""+st.getKey()+"\",c."+(package_data_datatype.get(s).get(st.getKey()).equalsIgnoreCase("int")?"getInt":"getString")+"(colz.indexOf(\""+st.getValue()+"\")))");
 
