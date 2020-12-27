@@ -236,10 +236,10 @@ public class Anna extends AbstractProcessor {
                     {
                         column_json.put(column_name,dp.json_key());
                         column_datatype.put(column_name,field.asType().toString());
+                        data_datatype_column_json.put(field.getSimpleName().toString(),new String[]{field.asType().toString(),column_name,dp.json_key()});
 
                     }
-                    data_datatype_column_json.put(field.getSimpleName().toString(),new String[]{field.asType().toString(),column_name,dp.json_key()});
-                json_column.put(dp.json_key(),column_name);
+                 json_column.put(dp.json_key(),column_name);
                     messager.printMessage(Diagnostic.Kind.NOTE, "Field kind "+field.asType().toString()+" is  OK "+packages.size());
                     if(!started){
                         started=true;
