@@ -189,6 +189,9 @@ public class Anna extends AbstractProcessor {
                     ssd.table_name=ann.table_name();
                     ssd.upload_link=s.upload_link();
                     ssd.object_package=packag_nm;
+  ssd.download_array_position=s.download_array_position();
+  ssd.upload_array_position=s.upload_array_position();
+  ssd.is_ok_position=s.is_ok_position();
 
 
                     sync_descriptions.add(ssd);
@@ -530,6 +533,9 @@ all_elements.addAll(sel.getEnclosedElements());
                     "                   ssd_"+i+".table_name=\""+s.table_name+"\";\n" +
                     "                   ssd_"+i+".upload_link=\""+s.upload_link+"\";\n" +
                     "                   ssd_"+i+".object_package=\""+s.object_package+"\";\n" +
+                   "                   ssd_"+i+".download_array_position=\""+s.download_array_position+"\";\n" +
+                   "                   ssd_"+i+".upload_array_position=\""+s.upload_array_position+"\";\n" +
+                   "                   ssd_"+i+".is_ok_position=\""+s.is_ok_position+"\";\n" +
                     "                   result.add(ssd_"+i+")");
 
 

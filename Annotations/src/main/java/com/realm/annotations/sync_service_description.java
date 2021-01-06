@@ -9,12 +9,15 @@ import java.io.Serializable;
 
 public class sync_service_description implements Serializable, Cloneable {
 
-    public String service_name,upload_link,download_link,table_name,object_package;
+    public String service_name,upload_link,download_link,table_name,object_package,download_array_position,upload_array_position,is_ok_position;
     public String[] table_filters;
     public boolean use_download_filter=false;
    public int chunk_size=5000;
    public SyncDescription.service_type servic_type;
-
+    boolean cs_service=true;
+//   public String download_array_position="JO:Result";
+//    public String upload_array_position="";
+//    public String is_ok_position="JO:IsOkay";
 
 public sync_service_description ()
 {
