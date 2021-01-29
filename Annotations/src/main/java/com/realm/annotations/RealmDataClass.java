@@ -33,7 +33,8 @@ public class RealmDataClass {
     }
 
     public  List<sync_service_description> getSyncDescription() {return new ArrayList<>();}
-   public  sync_service_description getSyncDescription(Object obj) {String ss=obj.getClass().getName();return null;}
+
+   public  List<sync_service_description> getSyncDescription(Object obj) {return null;}
 
     public String getPackageTable(String package_name) {return "";}
 
