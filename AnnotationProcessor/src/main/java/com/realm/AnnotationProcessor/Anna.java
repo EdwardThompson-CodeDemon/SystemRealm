@@ -589,7 +589,7 @@ all_elements.addAll(sel.getEnclosedElements());
 
         }
         getSyncDescription.endControlFlow();
-        getSyncDescription.addStatement("return null");
+        getSyncDescription.addStatement("return result");
 
 //change all ifs to switch cases
         for (Map.Entry<String, String> s:package_table.entrySet()) {
