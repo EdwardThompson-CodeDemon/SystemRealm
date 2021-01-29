@@ -89,6 +89,7 @@ public class Anna extends AbstractProcessor {
         ArrayList<String> packages=new ArrayList<>();
         ArrayList<String> sync_packages=new ArrayList<>();
         ArrayList<sync_service_description> sync_descriptions=new ArrayList<>();
+        HashMap<String,ArrayList<sync_service_description>> package_sync_descriptions=new HashMap<>();
         HashMap<String,String> package_table=new HashMap<>();
         HashMap<String,HashMap<String,Boolean>> table_columns=new HashMap<>();
         HashMap<String,String> table_create_sttment=new HashMap<>();
@@ -176,7 +177,7 @@ public class Anna extends AbstractProcessor {
             if( sd.length>0)
             {
                 sync_packages.add(packag_nm);
-
+                        ArrayList<sync_service_description> ssds=new ArrayList();
                 for (SyncDescription s:sd)
                 {
                     sync_service_description ssd=new sync_service_description();
@@ -195,8 +196,10 @@ public class Anna extends AbstractProcessor {
 
 
                     sync_descriptions.add(ssd);
+                    ssds.add(ssd);
 
                 }
+                package_sync_descriptions.put(packag_nm,ssds);
 
 
             }
@@ -543,6 +546,51 @@ all_elements.addAll(sel.getEnclosedElements());
         }
         b.addStatement("return result");
 
+
+  MethodSpec.Builder getSyncDescription = MethodSpec.methodBuilder("getSyncDescription")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(String.class,"obj")
+                .returns(result)
+          .addStatement("$T result = new $T<>()", result, arrayList)
+
+                 .addStatement("String ss=obj.getClass().getName()", result, arrayList);
+
+        getSyncDescription.beginControlFlow("switch (ss)");
+
+         i=0;
+
+
+        for (Map.Entry<String, ArrayList<sync_service_description>> psd:package_sync_descriptions.entrySet()) {
+            getSyncDescription.addCode( "case \""+psd.getKey()+"\":\n");
+
+            for (sync_service_description s:psd.getValue()) {
+
+
+                getSyncDescription.addStatement( "sync_service_description ssd_"+i+"=new sync_service_description();\n" +
+                        "                   ssd_"+i+".service_name=\""+s.service_name+"\";\n" +
+                        "                   ssd_"+i+".chunk_size="+s.chunk_size+";\n" +
+                        "                   ssd_"+i+".download_link=\""+s.download_link+"\";\n" +
+                        "                   ssd_"+i+".use_download_filter="+s.use_download_filter+";\n" +
+                        "                   ssd_"+i+".servic_type=com.realm.annotations.SyncDescription.service_type.values()["+s.servic_type.ordinal()+"];\n" +
+                        "                   ssd_"+i+".table_filters=new String[]{"+concat_string(s.table_filters)+"};\n" +
+                        "                   ssd_"+i+".table_name=\""+s.table_name+"\";\n" +
+                        "                   ssd_"+i+".upload_link=\""+s.upload_link+"\";\n" +
+                        "                   ssd_"+i+".object_package=\""+s.object_package+"\";\n" +
+                        "                   ssd_"+i+".download_array_position=\""+s.download_array_position+"\";\n" +
+                        "                   ssd_"+i+".upload_array_position=\""+s.upload_array_position+"\";\n" +
+                        "                   ssd_"+i+".is_ok_position=\""+s.is_ok_position+"\";\n" +
+                        "                   result.add(ssd_"+i+")");
+
+
+
+
+                i++;
+            }
+
+        }
+        getSyncDescription.endControlFlow();
+        getSyncDescription.addStatement("return null");
+
 //change all ifs to switch cases
         for (Map.Entry<String, String> s:package_table.entrySet()) {
 
@@ -723,7 +771,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
 
 
-        writePKGF(packages,sync_packages,b.build(),b2.build(),b3.build(),b4.build(),
+        writePKGF(packages,sync_packages,getSyncDescription.build(),b.build(),b2.build(),b3.build(),b4.build(),
                 b5.build(),b6.build(),b7.build(),b8.build(),b9.build(),b10.build(),
                 b11.build(),b12.build(),b13.build());
         return true;
@@ -732,6 +780,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
     private void writePKGF(ArrayList<String> all_packages,ArrayList<String> sync_packages,
                            MethodSpec getSyncDescription,
+                           MethodSpec getSyncDescriptions,
                            MethodSpec getPackageTable,
                            MethodSpec getTableColumns,
                            MethodSpec getTableCreateStatements,
@@ -779,6 +828,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
                 .addMethod(getDynamicClassPaths)
                 .addMethod(getDynamicSyncClassPaths)
                 .addMethod(getSyncDescription)
+                .addMethod(getSyncDescriptions)
                 .addMethod(getPackageTable)
                 .addMethod(getTableColumns)
                 .addMethod(getTableCreateStatements)
