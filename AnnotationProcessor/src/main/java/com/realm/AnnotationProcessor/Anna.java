@@ -549,7 +549,7 @@ all_elements.addAll(sel.getEnclosedElements());
 
   MethodSpec.Builder getSyncDescription = MethodSpec.methodBuilder("getSyncDescription")
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(String.class,"obj")
+                .addParameter(Object.class,"obj")
                 .returns(result)
           .addStatement("$T result = new $T<>()", result, arrayList)
 
