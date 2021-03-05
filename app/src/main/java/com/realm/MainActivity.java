@@ -34,7 +34,8 @@ import org.json.JSONObject;
 
 import java.util.concurrent.TimeUnit;
 
-import sparta.realm.Dynamics.spartaDynamics;
+
+
 
 import static com.realm.SpartaApplication.realm;
 

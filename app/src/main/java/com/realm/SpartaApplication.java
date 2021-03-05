@@ -10,7 +10,7 @@ import android.widget.Toast;
 import com.realm.annotations.RealmDataClass;
 import com.realm.spartaservices.dbh;
 
-import sparta.realm.Dynamics.spartaDynamics;
+import sparta.realm.RealmDynamics.spartaDynamics;
 
 
 public class SpartaApplication extends Application {

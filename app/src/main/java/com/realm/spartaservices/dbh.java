@@ -45,7 +45,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import dalvik.system.DexFile;
-import sparta.realm.Dynamics.spartaDynamics;
+import sparta.realm.RealmDynamics.spartaDynamics;
+
 
 import static com.realm.SpartaApplication.realm;
 

@@ -63,6 +63,8 @@ public class Anna extends AbstractProcessor {
 
         super.init(processingEnvironment);
         messager=processingEnvironment.getMessager();
+
+
         filer = processingEnvironment.getFiler();
         messager.printMessage(Diagnostic.Kind.NOTE, "Launched initialized");
         initd=true;
@@ -81,6 +83,7 @@ public class Anna extends AbstractProcessor {
         }
         return found;
     }
+    String package_name="sparta.realm.Dynamics";
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
 
@@ -150,6 +153,14 @@ public class Anna extends AbstractProcessor {
         messager.printMessage(Diagnostic.Kind.NOTE, "Launched generated variables"+sid_column+" "+" "+active_json_key);
 
         for (Element element : roundEnvironment.getElementsAnnotatedWith(DynamicClass.class)) {
+            TypeElement typeElement = (TypeElement) element;
+
+            String packag_nm=typeElement.getQualifiedName().toString();
+            if(packag_nm.split(".").length<packag_nm.split(".").length)
+            {
+package_name=packag_nm;
+            }
+            messager.printMessage(Diagnostic.Kind.NOTE, "Realm package :"+package_name.substring(0,package_name.lastIndexOf(".")));
 
             if (element.getKind() != ElementKind.CLASS) {
                 messager.printMessage(Diagnostic.Kind.ERROR, element.getSimpleName()+" isnt a class. only classes can be annotated with DynamicClass");
@@ -166,10 +177,7 @@ public class Anna extends AbstractProcessor {
                 return false;
             }
 
-            TypeElement typeElement = (TypeElement) element;
-            //writeSourceFile(typeElement);
-            String packag_nm=typeElement.getQualifiedName().toString();
-            messager.printMessage(Diagnostic.Kind.NOTE, packag_nm+" is  OK "+packages.size());
+              messager.printMessage(Diagnostic.Kind.NOTE, packag_nm+" is  OK "+packages.size());
             packages.add(packag_nm);
             DynamicClass ann = element.getAnnotation(DynamicClass.class);
             SyncDescription[] sd = element.getAnnotationsByType(SyncDescription.class);
@@ -851,7 +859,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
                 .build();
 
-        JavaFile javaFile = JavaFile.builder("sparta.realm.Dynamics", spartaDynamicsClass)
+        JavaFile javaFile = JavaFile.builder(package_name.substring(0,package_name.lastIndexOf("."))+".RealmDynamics", spartaDynamicsClass)
                 .build();
 
         try {
