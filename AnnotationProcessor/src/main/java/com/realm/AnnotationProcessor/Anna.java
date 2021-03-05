@@ -83,10 +83,12 @@ public class Anna extends AbstractProcessor {
         }
         return found;
     }
-    String package_name="sparta.realm.Dynamics";
+//   String package_name="sparta.realm.Dynamics";
+//  String package_name="com.Thompsons.sparta.realm.v1.Dynamics";
+   String package_name="RealmDynamics";
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-
+//if(initd){return true;}
 //LinkedHashMap
         messager.printMessage(Diagnostic.Kind.NOTE, "Launched launcher");
         ArrayList<String> packages=new ArrayList<>();
@@ -152,15 +154,24 @@ public class Anna extends AbstractProcessor {
 
         messager.printMessage(Diagnostic.Kind.NOTE, "Launched generated variables"+sid_column+" "+" "+active_json_key);
 
-        for (Element element : roundEnvironment.getElementsAnnotatedWith(DynamicClass.class)) {
+
+        
+ for (Element element : roundEnvironment.getElementsAnnotatedWith(DynamicClass.class)) {
             TypeElement typeElement = (TypeElement) element;
 
             String packag_nm=typeElement.getQualifiedName().toString();
-            if(packag_nm.split(".").length<packag_nm.split(".").length)
+//            if(packag_nm.split(".").length<packag_nm.split(".").length)
+//            {
+//package_name=packag_nm;
+//            }
+            if(packag_nm.split(".").length<(package_name.contains(".")?package_name.split(".").length:10))
             {
-package_name=packag_nm;
+                package_name=packag_nm;
+            }else if((packag_nm.split(".").length==(package_name.contains(".")?package_name.split(".").length:10))&&packag_nm.length()<package_name.length())
+            {
+                package_name=packag_nm;
             }
-            messager.printMessage(Diagnostic.Kind.NOTE, "Realm package :"+package_name.substring(0,package_name.lastIndexOf(".")));
+            messager.printMessage(Diagnostic.Kind.NOTE, "Realm package :"+(package_name.contains(".")?package_name.substring(0,package_name.lastIndexOf(".")):packag_nm));
 
             if (element.getKind() != ElementKind.CLASS) {
                 messager.printMessage(Diagnostic.Kind.ERROR, element.getSimpleName()+" isnt a class. only classes can be annotated with DynamicClass");
@@ -177,7 +188,7 @@ package_name=packag_nm;
                 return false;
             }
 
-              messager.printMessage(Diagnostic.Kind.NOTE, packag_nm+" is  OK "+packages.size());
+           //   messager.printMessage(Diagnostic.Kind.NOTE, packag_nm+" is  OK "+packages.size());
             packages.add(packag_nm);
             DynamicClass ann = element.getAnnotation(DynamicClass.class);
             SyncDescription[] sd = element.getAnnotationsByType(SyncDescription.class);
@@ -233,7 +244,7 @@ package_name=packag_nm;
 all_elements.addAll(sel.getEnclosedElements());
 }
 //            Element super_element=processingEnv.getTypeUtils().asElement(((TypeElement)element).getSuperclass());
-             messager.printMessage(Diagnostic.Kind.NOTE, sel.getSimpleName()+" Super el");
+//             messager.printMessage(Diagnostic.Kind.NOTE, sel.getSimpleName()+" Super el");
             String create_sttm = "CREATE TABLE \\\"\"+(copy?\"CP_\":\"\")+\""+ann.table_name()+"\\\"";
             String create_index_sttm = "";
             String qry="DELETE FROM "+ann.table_name()+" WHERE ("+sid_column+"='\"+sid+\"' OR "+sid_column+"=\"+sid+\") AND sync_status='"+ sync_status.syned.ordinal()+"'";
@@ -249,7 +260,9 @@ all_elements.addAll(sel.getEnclosedElements());
 
 
                 DynamicProperty dp=  field.getAnnotation(DynamicProperty.class);
-                if(dp==null){ messager.printMessage(Diagnostic.Kind.NOTE, field.getSimpleName()+" Isnt annotated Skipping ..");continue;}
+                if(dp==null){
+//                    messager.printMessage(Diagnostic.Kind.NOTE, field.getSimpleName()+" Isnt annotated Skipping ..");
+                    continue;}
                 String column_name=(dp.column_name().length()<1)?field.getSimpleName().toString():dp.column_name();
                 try {
                     column_index.put(column_name,dp.indexed_column());
@@ -269,7 +282,7 @@ all_elements.addAll(sel.getEnclosedElements());
                     }
 
                         json_column.put(dp.json_key(),column_name);
-                    messager.printMessage(Diagnostic.Kind.NOTE, "Field kind "+field.asType().toString()+" is  OK "+packages.size());
+                 //   messager.printMessage(Diagnostic.Kind.NOTE, "Field kind "+field.asType().toString()+" is  OK "+packages.size());
                     if(!started){
                         started=true;
                         create_sttm+=" (";
@@ -289,7 +302,7 @@ all_elements.addAll(sel.getEnclosedElements());
 
                     table_columns_i.add("{\""+column_name+"\",\""+dp.json_key()+"\"}");
 
-                    messager.printMessage(Diagnostic.Kind.NOTE, column_name+" Column");
+               //     messager.printMessage(Diagnostic.Kind.NOTE, column_name+" Column");
 
 
 
@@ -859,9 +872,13 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
                 .build();
 
-        JavaFile javaFile = JavaFile.builder(package_name.substring(0,package_name.lastIndexOf("."))+".RealmDynamics", spartaDynamicsClass)
+         JavaFile javaFile = JavaFile.builder(package_name.substring(0,package_name.lastIndexOf("."))+".RealmDynamics", spartaDynamicsClass)
+        //   JavaFile javaFile = JavaFile.builder("sparta.realm.RealmDynamics", spartaDynamicsClass)
                 .build();
 
+
+//        messager.printMessage(Diagnostic.Kind.NOTE, javaFile.;);
+        messager.printMessage(Diagnostic.Kind.NOTE, "Writing file file "+package_name.substring(0,package_name.lastIndexOf("."))+".RealmDynamics");
         try {
             javaFile.writeTo(filer);
         } catch (Exception e) {

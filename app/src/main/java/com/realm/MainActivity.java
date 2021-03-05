@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 
 
 
-
 import static com.realm.SpartaApplication.realm;
 
 public class MainActivity extends AppCompatActivity {

@@ -17,6 +17,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.reflect.ClassPath;
 import com.realm.annotations.sync_service_description;
 import com.realm.annotations.sync_status;
+import com.realm.wc.RealmDynamics.spartaDynamics;
 import com.realm.wc.supplier_account;
 
 import net.sqlcipher.database.SQLiteDatabase;
@@ -45,7 +46,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import dalvik.system.DexFile;
-import sparta.realm.RealmDynamics.spartaDynamics;
+
+
 
 
 import static com.realm.SpartaApplication.realm;
