@@ -155,7 +155,7 @@ public class Anna extends AbstractProcessor {
         messager.printMessage(Diagnostic.Kind.NOTE, "Launched generated variables"+sid_column+" "+" "+active_json_key);
 
 
-        
+
  for (Element element : roundEnvironment.getElementsAnnotatedWith(DynamicClass.class)) {
             TypeElement typeElement = (TypeElement) element;
 
@@ -364,7 +364,8 @@ all_elements.addAll(sel.getEnclosedElements());
                 .addStatement("int max=ar_sz<=compound_limit?1:ar_sz%compound_limit>0?(ar_sz/compound_limit)+1:(ar_sz/compound_limit)")
                 .addStatement("String[] qryz=new String[max]")
                 .addStatement("StringBuffer sb_sid=new StringBuffer(\"(\");")
-                .beginControlFlow("switch(package_name)");
+                .addStatement("StringBuffer sb_sid_inactive=new StringBuffer(\"(\");")
+                .beginControlFlow("switch(package_name)");//continue sedtting   up realm to get inactive ids
 
         for (String s:package_column_json.keySet()) {
 
@@ -380,7 +381,8 @@ all_elements.addAll(sel.getEnclosedElements());
             b13.beginControlFlow("for(int s=0;s<(((m*compound_limit)+compound_limit)<=ar_sz?compound_limit:ar_sz-(m*compound_limit));s++)");
             b13.addStatement("int i=(m*compound_limit)+s");
             b13.addStatement("JSONObject jo= array.getJSONObject(i)");
-            b13.addStatement("sb_sid.append(i==0?jo.getString(\"id\"):\",\"+jo.getString(\"id\"));");
+            b13.addStatement("sb_sid.append(i==0?jo.getString(\"id\"):\",\"+jo.getString(\"id\"))");
+            b13.addStatement("sb_sid_inactive.append(jsonHasActiveKey(jo)?(i==0?jo.getString(\""+active_json_key+"\"):\",\"+jo.getString(\""+active_json_key+"\")):\"\")");
 //            b13.addCode("sb.append(s==0?\"SELECT \"+(jo.getString(\"id\"))+\" AS sid,\"+\n" +
 //                    "                               (jo.getString(\"member_id\"))+\" AS member_id,\"+\n" +
 //                    "                                (jo.getString(\"acc_id\"))+\" AS acc_id,'\"+\n" +
@@ -432,7 +434,8 @@ all_elements.addAll(sel.getEnclosedElements());
             b13.addStatement("qryz[m]=sb.toString()");
             b13.endControlFlow();
             b13.addStatement(" sb_sid.append(\")\");");
-            b13.addStatement("return new String[][]{new String[]{sb_sid.toString()},qryz}");
+//            b13.addStatement("return new String[][]{new String[]{sb_sid.toString()},qryz}");
+            b13.addStatement(" return new String[][]{new String[]{sb_sid.toString(),sb_sid_inactive.toString()},qryz}");
 //            b13.addStatement("return qryz");
 
 
