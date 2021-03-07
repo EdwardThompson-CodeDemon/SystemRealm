@@ -382,7 +382,7 @@ all_elements.addAll(sel.getEnclosedElements());
             b13.addStatement("int i=(m*compound_limit)+s");
             b13.addStatement("JSONObject jo= array.getJSONObject(i)");
             b13.addStatement("sb_sid.append(i==0?jo.getString(\"id\"):\",\"+jo.getString(\"id\"))");
-            b13.addStatement("sb_sid_inactive.append(jsonHasActiveKey(jo)?(i==0?jo.getString(\""+active_json_key+"\"):\",\"+jo.getString(\""+active_json_key+"\")):\"\")");
+//            b13.addStatement("sb_sid_inactive.append(jsonHasActiveKey(jo)?(i==0?jo.getString(\""+active_json_key+"\"):\",\"+jo.getString(\""+active_json_key+"\")):\"\")");
 //            b13.addCode("sb.append(s==0?\"SELECT \"+(jo.getString(\"id\"))+\" AS sid,\"+\n" +
 //                    "                               (jo.getString(\"member_id\"))+\" AS member_id,\"+\n" +
 //                    "                                (jo.getString(\"acc_id\"))+\" AS acc_id,'\"+\n" +
