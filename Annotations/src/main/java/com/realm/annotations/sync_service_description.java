@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 public class sync_service_description implements Serializable, Cloneable {
 
-    public String service_name,upload_link,download_link,table_name,object_package,download_array_position,upload_array_position,is_ok_position;
+    public String service_id,service_name,upload_link,download_link,table_name,object_package,download_array_position,upload_array_position,is_ok_position;
     public String[] table_filters;
     public boolean use_download_filter=false;
    public int chunk_size=5000;
