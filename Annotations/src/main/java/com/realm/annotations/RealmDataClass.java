@@ -34,7 +34,10 @@ public class RealmDataClass {
 
     public  List<sync_service_description> getSyncDescription() {return new ArrayList<>();}
 
+    public  HashMap<String, sync_service_description> getHashedSyncDescriptions() {return null;}
+
    public  List<sync_service_description> getSyncDescription(Object obj) {return null;}
+
 
     public String getPackageTable(String package_name) {return "";}
 

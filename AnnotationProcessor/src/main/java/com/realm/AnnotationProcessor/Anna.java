@@ -340,11 +340,13 @@ all_elements.addAll(sel.getEnclosedElements());
 
         ClassName syncdescription = ClassName.get(sync_service_description.class);
         ClassName list = ClassName.get("java.util", "List");
+        ClassName hashMap = ClassName.get("java.util", "HashMap");
         ClassName arrayList = ClassName.get("java.util", "ArrayList");
         ClassName jsonObject = ClassName.get("org.json","JSONObject");
         ClassName jsonArray = ClassName.get("org.json","JSONArray");
         ClassName cursor = ClassName.get("android.database","Cursor");
         TypeName result = ParameterizedTypeName.get(list, syncdescription);
+        TypeName hash_map_string_sync_description = ParameterizedTypeName.get(hashMap, ClassName.get(String.class),syncdescription);
         ClassName hashmap = ClassName.get(HashMap.class);
         TypeName hash_map_parammd = ParameterizedTypeName.get(hashmap, ClassName.get(String.class), ClassName.get(String.class));
 
@@ -545,6 +547,11 @@ all_elements.addAll(sel.getEnclosedElements());
                 .returns(String.class)
                 .beginControlFlow("if (package_tables==null)")
                 .addStatement("$T map = new $T<>()", hash_map_parammd, hashmap);
+//        HashMap<String, sync_service_description>
+        MethodSpec.Builder getHashedSyncDescriptions = MethodSpec.methodBuilder("getHashedSyncDescriptions")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(hash_map_string_sync_description)
+                .addStatement("$T result = new $T<String,sync_service_description>()", hash_map_string_sync_description, hashmap);
 
 
         MethodSpec.Builder b = MethodSpec.methodBuilder("getSyncDescription")
@@ -576,6 +583,31 @@ all_elements.addAll(sel.getEnclosedElements());
             i++;
         }
         b.addStatement("return result");
+
+
+         i=0;
+        for (sync_service_description s:sync_descriptions) {
+
+            getHashedSyncDescriptions.addStatement(" sync_service_description ssd_"+i+"=new sync_service_description();\n" +
+                    "                   ssd_"+i+".service_name=\""+s.service_name+"\";\n" +
+                    "                   ssd_"+i+".chunk_size="+s.chunk_size+";\n" +
+                    "                   ssd_"+i+".download_link=\""+s.download_link+"\";\n" +
+                    "                   ssd_"+i+".use_download_filter="+s.use_download_filter+";\n" +
+                    "                   ssd_"+i+".servic_type=com.realm.annotations.SyncDescription.service_type.values()["+s.servic_type.ordinal()+"];\n" +
+                    "                   ssd_"+i+".table_filters=new String[]{"+concat_string(s.table_filters)+"};\n" +
+                    "                   ssd_"+i+".table_name=\""+s.table_name+"\";\n" +
+                    "                   ssd_"+i+".upload_link=\""+s.upload_link+"\";\n" +
+                    "                   ssd_"+i+".object_package=\""+s.object_package+"\";\n" +
+                   "                   ssd_"+i+".download_array_position=\""+s.download_array_position+"\";\n" +
+                   "                   ssd_"+i+".upload_array_position=\""+s.upload_array_position+"\";\n" +
+                   "                   ssd_"+i+".is_ok_position=\""+s.is_ok_position+"\";\n" +
+                   "                   ssd_"+i+".service_id="+(s.service_id==null?"null":"\""+s.service_id+"\"")+";\n" +
+                    "                   result.put(ssd_"+i+".service_id,ssd_"+i+")");
+
+
+            i++;
+        }
+        getHashedSyncDescriptions.addStatement("return result");
 
 
   MethodSpec.Builder getSyncDescription = MethodSpec.methodBuilder("getSyncDescription")
@@ -804,7 +836,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
 
         writePKGF(packages,sync_packages,getSyncDescription.build(),b.build(),b2.build(),b3.build(),b4.build(),
                 b5.build(),b6.build(),b7.build(),b8.build(),b9.build(),b10.build(),
-                b11.build(),b12.build(),b13.build());
+                b11.build(),b12.build(),b13.build(),getHashedSyncDescriptions.build());
         return true;
     }
     boolean writen_dyna_file=false;
@@ -823,7 +855,8 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
                            MethodSpec getTables,
                            MethodSpec getObjectFromCursor,
                            MethodSpec getJsonFromCursor,
-                           MethodSpec getInsertStatementsFromJson) {
+                           MethodSpec getInsertStatementsFromJson,
+                           MethodSpec getHashedSyncDescriptions) {
 
         if(writen_dyna_file){
             return;
@@ -859,6 +892,7 @@ public static Object getObjectFromCursor(Cursor c, String pkg_name) {
                 .addMethod(getDynamicClassPaths)
                 .addMethod(getDynamicSyncClassPaths)
                 .addMethod(getSyncDescription)
+                .addMethod(getHashedSyncDescriptions)
                 .addMethod(getSyncDescriptions)
                 .addMethod(getPackageTable)
                 .addMethod(getTableColumns)
