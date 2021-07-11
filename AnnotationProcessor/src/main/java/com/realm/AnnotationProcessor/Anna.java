@@ -212,6 +212,7 @@ public class Anna extends AbstractProcessor {
   ssd.download_array_position=s.download_array_position();
   ssd.upload_array_position=s.upload_array_position();
   ssd.is_ok_position=s.is_ok_position();
+  ssd.is_ok_position=s.service_id()=="null"?null:s.service_id();
 
 
                     sync_descriptions.add(ssd);
