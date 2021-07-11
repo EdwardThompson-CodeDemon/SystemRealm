@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Repeatable(SyncDescriptions.class)
 public @interface SyncDescription {
+    String service_id() default "Annonymous_id";
     String service_name() default "Annonymous";
     String[] table_filters() default {};
     String upload_link() default "";

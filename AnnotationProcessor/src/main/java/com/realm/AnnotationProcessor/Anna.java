@@ -642,6 +642,7 @@ all_elements.addAll(sel.getEnclosedElements());
                         "                   ssd_"+i+".download_array_position=\""+s.download_array_position+"\";\n" +
                         "                   ssd_"+i+".upload_array_position=\""+s.upload_array_position+"\";\n" +
                         "                   ssd_"+i+".is_ok_position=\""+s.is_ok_position+"\";\n" +
+                        "                   ssd_"+i+".service_id="+(s.service_id==null?"null":"\""+s.service_id+"\"")+";\n" +
                         "                   result.add(ssd_"+i+")");
 
 
